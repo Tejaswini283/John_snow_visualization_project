@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script type="text/javascript" src="js/d3.v3.min.js"></script>
+  <script type="text/javascript" src="js/d3.tip.v0.6.3.js"></script>
+  <script src="js/app.js"></script>
+  <script src="./deaths_age_sex_chart.js"></script>
+  <script src="./draw-deaths.js"></script>
+  <script src="./gender-pie-chart.js"></script>
+  <script src="./age-pie-chart.js"></script>
+  <style>
+    #deathdayssvg path {
+      fill: none;
+      stroke: grey;
+      stroke-width: 5px;
+    }
+    .icon text {
+      fill: black;
+      text-anchor: middle;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .box-content{
+    text-align: center;
+    font-size: 15px;
+    margin: auto;
+    width: 900px;
+    height: 50px;
+    
+}
+ul.horizontal-list li {
+  display: inline-block;
+  border-right: 1px solid white;
+  padding: 0 0.5rem;
+}
+    svg,
+  .legends {
+    height: 400px;
+  }
+  </style>
+</head>
+
+<body>
+  <div>
+    <h3 class="text-center">Dr John snows map of Londons 1854 cholera epidemic</h3>
+    <div> 
+      <span><a href="documentation.html" style="color:black; float:right ;"><button>Documentation</button></a></span>
+    <br>
+  </div>
+
+  <div class="box-content">
+
+  Select Data
+    <div class="selectionMode" >
+      <label for="yes">Age</label>
+      <input type="radio" name="selectionMode" id="age" value="age" checked/>
+      <label for="no">Gender</label>
+      <input type="radio" name="selectionMode" id="gender" value="gender" />
+    </div>
+
+  </div>
+    <span>Age</span>
+     <ul class="horizontal-list">
+      <li><h6 style="color: grey">0-10</h6></li>
+      <li><h6 style="color:rgba(246, 250, 4, 0.877)">11-20</h6></li>
+      <li><h6 style="color: blue">21-40</h6></li>
+      <li><h6 style="color: green">41-60</h6></li>
+      <li><h6 style="color: red">61-80</h6> </li>
+      <li> <h6 style="color: brown">> 80</h6></li>
+    </ul>  
+
+    <div>
+      <span>Gender</span>
+      <ul class="horizontal-list">
+        <li><h6 style="color: green; ">Male</h6></li>
+        <li><h6 style="color: black;">Female</h6></li>
+    </ul>
+    </div>    
+  </div>
+  </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-8 d-flex flex-column" style="text-align: center; font-size: large;" >Timeline of Deaths <svg id="deathagesexsvg"></svg></div>
+  <div class="col-md-5 d-flex flex-column" style="text-align: left; font-size: medium;" >Street Map of London<svg id="deathdayssvg"></svg></div>
+  <div class="col-md-2 d-flex flex-column" style="text-align: center; font-size: large;" id="gender_distribution_div">Distribution of Deaths by Gender<svg id="gender_distribution_svg"></svg></div>
+  <div class="col-md-2 d-flex flex-column" style="text-align: center; font-size: medium;" id="age_distribution_div">Distribution of Deaths by Age<svg id="age_distribution_svg"></svg></div>
+  
+</div>
+</body>
+
+<script>
+// Making deaths cumulative on map till the date selected
+  d3.csv("deathdays.csv").then((deathDays) => {
+    let sumOfDeaths = 0;
+    deathDays.forEach((d) => {
+      sumOfDeaths += +d.deaths;
+      d.total = sumOfDeaths;
+    });
+    var Mousehover;
+
+// Selecting the data to be displayed based on radio button age or gender
+    d3.csv("deaths_age_sex.csv").then((data) => {
+      const fn = (hoveredRow, count_death, hisd) => {
+        addDeathsMarkerOnMap(count_death, radioVal)
+        Mousehover = hoveredRow;
+
+        if (count_death?.length) {
+          drawPieChart(count_death);
+        }
+      }
+      setMouseOverFn(fn)
+      set_deaths_age_sex_chart_data(deathDays,
+        data)
+      draw_deaths_age_sex_chart();
+    });
+  });
+
+//Adding radio button to toggle between gender and age
+  var radioVal = "age";
+  const radios = document.querySelectorAll('input[name="selectionMode"]');
+  radios.forEach(radio => {
+    radio.addEventListener('click', function () {
+      radioVal = radio.value;
+      var DeathAS;
+      d3.csv("deaths_age_sex.csv").then(function (data) {
+        DeathAS = JSON.parse(JSON.stringify(data));
+      });
+//creating slice function
+      if (DeathAS) {
+        addDeathsMarkerOnMap(
+          DeathAS.slice(0, Mousehover.total + Mousehover.deaths),
+          radioVal
+        );
+      }
+    });
+  });
+
+</script>
+</html>
